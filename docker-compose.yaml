@@ -1,0 +1,29 @@
+services:
+  auth-db:
+    image: postgres:17.5
+    restart: always
+    container_name: mspr-auth-db
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-root}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=${DB_NAME:-auth_db}
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+
+  auth-service:
+    build: .
+    container_name: mspr-auth-service
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-root}:${DB_PASSWORD:-password}@auth-db:5432/${DB_NAME:-auth_db}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    depends_on:
+      - auth-db
+
+volumes:
+  auth_db_data:

@@ -1,0 +1,23 @@
+# --- Dépendances ---
+node_modules
+
+# --- Logs & Debug ---
+npm-debug.log
+yarn-error.log
+*.log
+
+# --- Configuration & Secrets ---
+.env
+.git
+.gitignore
+
+# --- Docker ---
+Dockerfile*
+docker-compose*
+
+# --- Build ---
+dist
+build
+
+# --- Divers ---
+README.md
