@@ -1,6 +1,7 @@
 {
   "name": "mspr-auth-service",
   "scripts": {
+    "test": "bun test",
     "dev": "bun run --hot src/index.ts",
     "db:generate:migration": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
