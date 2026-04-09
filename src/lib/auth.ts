@@ -23,12 +23,17 @@ export const auth = betterAuth({
         autoSignInAfterVerification: true,
         async sendVerificationEmail({ user, url, token }, request) {
             console.log("📨 Envoi de l'email de vérification à :", user.email);
-            await resend.emails.send({
-                from: "onboarding@resend.dev",
-                to: user.email,
-                subject: "Vérifiez votre adresse email",
-                html: getVerificationEmailTemplate(url, user.name),
-            });
+            try {
+                const result = await resend.emails.send({
+                    from: "noreply@arthurponcin.me",
+                    to: user.email,
+                    subject: "Vérifiez votre adresse email",
+                    html: getVerificationEmailTemplate(url, user.name),
+                });
+                console.log("📬 Résultat Resend:", JSON.stringify(result));
+            } catch (e) {
+                console.error("❌ Erreur Resend:", e);
+            }
         },
     },
 
@@ -39,7 +44,7 @@ export const auth = betterAuth({
         async sendResetPassword({ user, url, token }, request) {
             console.log("📨 Envoi email reset password à :", user.email);
             await resend.emails.send({
-                from: "onboarding@resend.dev",
+                from: "noreply@arthurponcin.me",
                 to: user.email,
                 subject: "Réinitialisation de mot de passe",
                 html: `<p>Cliquez ici pour réinitialiser : <a href="${url}">${url}</a></p>`,
