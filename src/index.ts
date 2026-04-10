@@ -68,9 +68,12 @@ app.get("/api/jwt", async (c) => {
     exp: Math.floor(Date.now() / 1000) + 60 * 60,
   };
 
-  const secret = process.env.BETTER_AUTH_SECRET || "password";
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    return c.json({ error: "Server misconfiguration: BETTER_AUTH_SECRET is not set" }, 500);
+  }
 
-  const token = await sign(payload, secret);
+  const token = await sign(payload, secret, 'HS512');
 
   return c.json({ token });
 });

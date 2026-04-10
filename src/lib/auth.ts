@@ -23,12 +23,18 @@ export const auth = betterAuth({
         autoSignInAfterVerification: true,
         async sendVerificationEmail({ user, url, token }, request) {
             console.log("📨 Envoi de l'email de vérification à :", user.email);
-            await resend.emails.send({
+            console.log("🔗 URL de vérification :", url);
+            const { data, error } = await resend.emails.send({
                 from: "onboarding@resend.dev",
                 to: user.email,
                 subject: "Vérifiez votre adresse email",
                 html: getVerificationEmailTemplate(url, user.name),
             });
+            if (error) {
+                console.error("❌ Erreur Resend:", JSON.stringify(error));
+            } else {
+                console.log("✅ Email envoyé, id Resend:", data?.id);
+            }
         },
     },
 
