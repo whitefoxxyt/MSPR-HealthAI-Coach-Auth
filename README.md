@@ -54,6 +54,63 @@ Payload du JWT :
 { "sub": "<user_id>", "email": "...", "name": "...", "exp": "<timestamp>" }
 ```
 
+## Schema de la base de donnees
+
+```mermaid
+erDiagram
+    user {
+        text id PK
+        text name
+        text email UK
+        boolean email_verified
+        text image
+        timestamp created_at
+        timestamp updated_at
+    }
+    session {
+        text id PK
+        timestamp expires_at
+        text token UK
+        text ip_address
+        text user_agent
+        text user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+    account {
+        text id PK
+        text account_id
+        text provider_id
+        text user_id FK
+        text access_token
+        text refresh_token
+        text id_token
+        timestamp access_token_expires_at
+        timestamp refresh_token_expires_at
+        text scope
+        text password
+        timestamp created_at
+        timestamp updated_at
+    }
+    verification {
+        text id PK
+        text identifier
+        text value
+        timestamp expires_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    jwks {
+        text id PK
+        text public_key
+        text private_key
+        timestamp created_at
+    }
+
+    user ||--o{ session : "user_id"
+    user ||--o{ account : "user_id"
+```
+
 ## Migrations
 
 Les migrations Drizzle sont dans `src/db/migrations/` et s'appliquent via :
