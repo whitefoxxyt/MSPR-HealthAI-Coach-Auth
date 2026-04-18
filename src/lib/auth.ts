@@ -22,13 +22,18 @@ export const auth = betterAuth({
         sendOnSignUp: true,
         autoSignInAfterVerification: true,
         async sendVerificationEmail({ user, url, token }, request) {
+            const frontUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
+            const verificationUrl = new URL(url);
+            verificationUrl.searchParams.set("callbackURL", frontUrl);
+            const finalUrl = verificationUrl.toString();
+
             console.log("📨 Envoi de l'email de vérification à :", user.email);
             try {
                 const result = await resend.emails.send({
                     from: "noreply@arthurponcin.me",
                     to: user.email,
                     subject: "Vérifiez votre adresse email",
-                    html: getVerificationEmailTemplate(url, user.name),
+                    html: getVerificationEmailTemplate(finalUrl, user.name),
                 });
                 console.log("📬 Résultat Resend:", JSON.stringify(result));
             } catch (e) {
