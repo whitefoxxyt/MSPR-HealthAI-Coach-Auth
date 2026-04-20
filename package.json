@@ -3,6 +3,7 @@
   "scripts": {
     "test": "bun test",
     "dev": "bun run --hot src/index.ts",
+    "start": "bun src/index.ts",
     "db:generate:migration": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
