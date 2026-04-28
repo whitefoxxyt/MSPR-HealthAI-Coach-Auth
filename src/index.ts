@@ -19,7 +19,7 @@ app.use(
   "/api/*",
   cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-    allowMethods: ["POST", "GET", "OPTIONS"],
+    allowMethods: ["POST", "GET", "PATCH", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
     credentials: true,
@@ -90,7 +90,10 @@ app.get("/api/jwt", async (c) => {
 const ALLOWED_TIERS: Tier[] = ["free", "premium", "premium_plus"];
 
 app.patch("/api/admin/users/:userId/subscription", async (c) => {
-  const secret = process.env.BETTER_AUTH_SECRET || "password";
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    return c.json({ error: "Server misconfigured" }, 500);
+  }
   const adminEmails = parseAdminEmails(process.env.ADMIN_EMAILS);
 
   const authHeader = c.req.header("Authorization");
