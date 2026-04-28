@@ -4,6 +4,7 @@ import { db } from "@/db/db";
 import { openAPI, jwt } from "better-auth/plugins";
 import { Resend } from "resend";
 import { getVerificationEmailTemplate } from "@/lib/email/template";
+import { onUserCreated } from "@/lib/subscriptions";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -17,6 +18,14 @@ export const auth = betterAuth({
         openAPI(),
         jwt(),
     ],
+
+    databaseHooks: {
+        user: {
+            create: {
+                after: onUserCreated,
+            },
+        },
+    },
 
     emailVerification: {
         sendOnSignUp: true,

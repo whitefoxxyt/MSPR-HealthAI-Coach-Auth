@@ -15,6 +15,13 @@
       "when": 1764255754058,
       "tag": "0001_cheerful_the_hood",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777376303582,
+      "tag": "0002_neat_nico_minoru",
+      "breakpoints": true
     }
   ]
 }
