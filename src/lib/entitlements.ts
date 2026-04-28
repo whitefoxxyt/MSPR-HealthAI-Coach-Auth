@@ -10,6 +10,10 @@ const TIER_FEATURES: Record<Tier, readonly string[]> = {
   premium_plus: ["analyze_meal", "meal_plan_basic", "meal_plan_premium"],
 };
 
+function isTier(value: unknown): value is Tier {
+  return value === "free" || value === "premium" || value === "premium_plus";
+}
+
 export function featuresForTier(tier: Tier): string[] {
   return [...TIER_FEATURES[tier]];
 }
@@ -33,7 +37,7 @@ export async function getEntitlements(userId: string): Promise<Entitlements> {
     .limit(1);
 
   const row = rows[0];
-  const tier = (row?.tier as Tier | undefined) ?? "free";
+  const tier: Tier = isTier(row?.tier) ? row.tier : "free";
   const startedAt = row?.startedAt ?? new Date();
   const expiresAt = row?.expiresAt ?? null;
 
