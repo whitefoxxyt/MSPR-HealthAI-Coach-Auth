@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { pgTable, text, timestamp, boolean, varchar, check } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -66,3 +67,25 @@ export const jwks = pgTable("jwks", {
   privateKey: text("private_key").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const userSubscriptions = pgTable(
+  "user_subscriptions",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => user.id, { onDelete: "cascade" }),
+    tier: varchar("tier", { length: 20 }).notNull().default("free"),
+    startedAt: timestamp("started_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at"),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    check(
+      "user_subscriptions_tier_check",
+      sql`${table.tier} IN ('free','premium','premium_plus')`,
+    ),
+  ],
+);
