@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { auth } from '@/lib/auth'
 import { cors } from 'hono/cors'
 import { sign } from 'hono/jwt'
+import { getEntitlements } from '@/lib/entitlements'
 
 const app = new Hono<{
   Variables: {
@@ -51,6 +52,14 @@ app.get("/api/session", (c) => {
     session,
     user
   });
+});
+
+app.get("/api/entitlements/me", async (c) => {
+  const user = c.get("user");
+  if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+  const entitlements = await getEntitlements(user.id);
+  return c.json(entitlements);
 });
 
 // Génère un JWT signé avec BETTER_AUTH_SECRET pour les autres microservices
