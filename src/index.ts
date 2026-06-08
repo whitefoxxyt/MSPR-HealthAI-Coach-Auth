@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { prometheus } from '@hono/prometheus'
 import { auth } from '@/lib/auth'
 import { cors } from 'hono/cors'
 import { sign, verify } from 'hono/jwt'
@@ -13,6 +14,10 @@ const app = new Hono<{
     session: typeof auth.$Infer.Session.session | null;
   }
 }>();
+
+// METRICS (Prometheus - RED: Request rate, Errors, Duration)
+const { printMetrics, registerMetrics } = prometheus();
+app.use("*", registerMetrics);
 
 // CORS
 app.use(
@@ -157,5 +162,7 @@ app.patch("/api/admin/users/:userId/subscription", async (c) => {
     updated_at: result.row.updatedAt.toISOString(),
   });
 });
+
+app.get("/metrics", printMetrics)
 
 export default app

@@ -8,6 +8,10 @@ import { onUserCreated } from "@/lib/subscriptions";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Mode offline (config performance/offline MSPR3) : desactive la verification email
+// et les envois Resend pour une demo sans connexion internet.
+const OFFLINE = process.env.AUTH_OFFLINE === "true";
+
 export const auth = betterAuth({
     database: drizzleAdapter(db, {
         provider: "pg",
@@ -28,9 +32,13 @@ export const auth = betterAuth({
     },
 
     emailVerification: {
-        sendOnSignUp: true,
+        sendOnSignUp: !OFFLINE,
         autoSignInAfterVerification: true,
         async sendVerificationEmail({ user, url, token }, request) {
+            if (OFFLINE) {
+                console.log("[offline] verification email desactivee pour", user.email);
+                return;
+            }
             const frontUrl = process.env.CORS_ORIGIN || "http://localhost:5173";
             const verificationUrl = new URL(url);
             verificationUrl.searchParams.set("callbackURL", frontUrl);
@@ -53,9 +61,13 @@ export const auth = betterAuth({
 
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: true,
+        requireEmailVerification: !OFFLINE,
 
         async sendResetPassword({ user, url, token }, request) {
+            if (OFFLINE) {
+                console.log("[offline] reset password email desactive pour", user.email);
+                return;
+            }
             console.log("📨 Envoi email reset password à :", user.email);
             await resend.emails.send({
                 from: "noreply@arthurponcin.me",
