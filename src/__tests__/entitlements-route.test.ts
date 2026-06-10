@@ -1,4 +1,10 @@
 import { describe, expect, it, mock, beforeEach } from "bun:test";
+import { sign } from "hono/jwt";
+
+// La route accepte aussi le JWT HS256 des microservices : secret deterministe
+// pour les tests, lu par la route a chaque requete.
+const TEST_SECRET = "test-secret-entitlements";
+process.env.BETTER_AUTH_SECRET = TEST_SECRET;
 
 // --- Mock auth module before importing the app ---
 const mockGetSession = mock<() => any>(() => null);
@@ -100,5 +106,57 @@ describe("GET /api/entitlements/me", () => {
     expect(body.tier).toBe("free");
     expect(body.expires_at).toBeNull();
     expect(body.features).toEqual(["analyze_meal"]);
+  });
+});
+
+describe("GET /api/entitlements/me avec JWT Bearer (microservices)", () => {
+  beforeEach(() => {
+    mockGetSession.mockReset();
+    mockGetSession.mockResolvedValue(null); // pas de cookie de session
+    selectChain.limit.mockReset();
+    selectChain.limit.mockImplementation(() => Promise.resolve([]));
+  });
+
+  it("accepte le JWT HS256 emis par /api/jwt pour les microservices", async () => {
+    const startedAt = new Date("2026-01-01T00:00:00Z");
+    selectChain.limit.mockResolvedValueOnce([
+      { tier: "premium", startedAt, expiresAt: null },
+    ]);
+    const token = await sign(
+      { sub: "user-789", exp: Math.floor(Date.now() / 1000) + 3600 },
+      TEST_SECRET,
+    );
+
+    const res = await app.request("/api/entitlements/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.tier).toBe("premium");
+  });
+
+  it("rejette un Bearer signe avec un autre secret", async () => {
+    const token = await sign(
+      { sub: "user-789", exp: Math.floor(Date.now() / 1000) + 3600 },
+      "wrong-secret",
+    );
+
+    const res = await app.request("/api/entitlements/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("rejette un Bearer expire", async () => {
+    const token = await sign(
+      { sub: "user-789", exp: Math.floor(Date.now() / 1000) - 60 },
+      TEST_SECRET,
+    );
+
+    const res = await app.request("/api/entitlements/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(401);
   });
 });

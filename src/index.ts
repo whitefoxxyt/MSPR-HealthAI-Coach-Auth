@@ -64,9 +64,29 @@ app.get("/api/session", (c) => {
 
 app.get("/api/entitlements/me", async (c) => {
   const user = c.get("user");
-  if (!user) return c.json({ error: "Unauthorized" }, 401);
+  let userId: string | null = user?.id ?? null;
 
-  const entitlements = await getEntitlements(user.id);
+  // Les microservices (AI-Nutrition, Reco-Fitness) appellent cette route avec
+  // le JWT HS256 emis par /api/jwt (Authorization: Bearer), pas avec le cookie
+  // de session : sans cette branche ils etaient degrades en tier free en silence.
+  if (!userId) {
+    const header = c.req.header("Authorization") ?? "";
+    if (header.toLowerCase().startsWith("bearer ")) {
+      try {
+        const payload = await verify(
+          header.slice(7).trim(),
+          process.env.BETTER_AUTH_SECRET || "password",
+        );
+        if (typeof payload.sub === "string") userId = payload.sub;
+      } catch {
+        // Token invalide ou expire : on retombe sur le 401 ci-dessous.
+      }
+    }
+  }
+
+  if (!userId) return c.json({ error: "Unauthorized" }, 401);
+
+  const entitlements = await getEntitlements(userId);
   return c.json(entitlements);
 });
 
